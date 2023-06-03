@@ -1,16 +1,14 @@
 public class Polynomial {
-    private double[] coefficients;
+    double[] coefficients;
 
     // No-argument constructor
     public Polynomial() {
-        coefficients = new double[1];
-        coefficients[0] = 0.0;
+        this.coefficients = new double[0];
     }
 
     // Constructor with array of coefficients
-    public Polynomial(double[] coeffs) {
-        coefficients = new double[coeffs.length];
-        System.arraycopy(coeffs, 0, coefficients, 0, coeffs.length);
+    public Polynomial(double[] coefficients) {
+        this.coefficients = coefficients;
     }
 
     // Method to add two polynomials
