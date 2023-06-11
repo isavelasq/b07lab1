@@ -9,66 +9,69 @@ public class Polynomial {
 
     // No-argument constructor
     public Polynomial() {
-        this.coefficients;
-	this.exponents;
+        coefficients = new double[1];
+        exponents = new int[1];
+        coefficients[0] = 0;
+        exponents[0] = 0;
     }
 
     // Constructor with array of coefficients
     public Polynomial(double[] coefficients, int[] exponents) {
         this.coefficients = null;
-	this.exponents = null;
+        this.exponents = null;
     }
 
     public Polynomial(File file) throws Exception {
-	Scanner myscan = new Scanner(file);
+        Scanner myscan = new Scanner(file);
 
-	if(!myscan.hasNextLine()){
-	this.coefficients = null;
-	this.exponents = null;
-	} else {
-	String line = myscan.nextLine();
-	line = line.replace("-","+-");
+        if (!myscan.hasNextLine()) {
+            this.coefficients = null;
+            this.exponents = null;
+        } else {
+            String line = myscan.nextLine();
+            line = line.replace("-", "+-");
 
-	String[] poly_arr = line.split("+");
+            String[] poly_arr = line.split("\\+");
 
-	this.exponents = new int[poly_arr.length];
-	this.coefficients = new double[poly_arr.length];
+            this.exponents = new int[poly_arr.length];
+            this.coefficients = new double[poly_arr.length];
 
-	for(int i = 0; i < poly_arr.length; i++) {
-		String[] sub_arr = poly_arr[i].split("x");
+            for (int i = 0; i < poly_arr.length; i++) {
+                String[] sub_arr = poly_arr[i].split("x");
 
-		coefficients[i] = Double.parseDouble(sub_arr[0]);
+                coefficients[i] = Double.parseDouble(sub_arr[0]);
 
-		if (sub_arr.length > 1) {
-			exponents[i] = Integer.parseInt(sub_arr[1]);
-			} else {
-			exponents[i] = 0;
-			}
-	myscan.close();
-	
+                if (sub_arr.length > 1) {
+                    exponents[i] = Integer.parseInt(sub_arr[1]);
+                } else {
+                    exponents[i] = 0;
+                }
+            }
+            myscan.close();
+        }
     }
 
-    public void saveToFile(String myfile) {
-	String writeString = "";
-	
-	for (int i = 0; i < this.coefficients.length; i++) {
-		writeString += coefficients[i];
-		if (exponents[i] != 0) {
-			writeString+="x" + exponents[i];
-		}
-		writeString += "+";
-	}
+    public void saveToFile(String myfile) throws Exception {
+        String writeString = "";
 
-	if(writeString.endsWith("+")) {
-		writeString = writeString.substring(0, writeString.length()-1);
-	}
+        for (int i = 0; i < this.coefficients.length; i++) {
+            writeString += coefficients[i];
+            if (exponents[i] != 0) {
+                writeString += "x" + exponents[i];
+            }
+            writeString += "+";
+        }
 
-	FileWriter myWriter = new FileWriter(new File(myfile));
-	myWriter.write(writeString);
-	myWriter.close();
+        if (writeString.endsWith("+")) {
+            writeString = writeString.substring(0, writeString.length() - 1);
+        }
+
+        FileWriter myWriter = new FileWriter(new File(myfile));
+        myWriter.write(writeString);
+        myWriter.close();
     }
 
-      // Method to add two polynomials
+       // Method to add two polynomials
     public Polynomial add(Polynomial p) {
         int maxLength = Math.max(coefficients.length, p.coefficients.length);
         double[] resultCoefficients = new double[maxLength];
@@ -99,25 +102,16 @@ public class Polynomial {
             }
         }
 
+        return new Polynomial(resultCoefficients, resultExponents);
+    }
+
     // Method to evaluate the polynomial for a given value of x
-     public double evaluate(double x) {
+    public double evaluate(double x) {
         double result = 0;
         for (int i = 0; i < coefficients.length; i++) {
             result += coefficients[i] * Math.pow(x, exponents[i]);
         }
         return result;
-    }
-
-    public Polynomial multiply(Polynomial polynomial) {
-        Polynomial newPoly = new Polynomial();
-        for (int i = 0; i < this.coefficients.length; i++) {
-            for (int j = 0; j < polynomial.coefficients.length; j++) {
-                double[] newCoeff = {this.coefficients[i] * polynomial.coefficients[j]};
-                int[] newExp = {this.exponents[i] + polynomial.exponents[j]};
-                newPoly = newPoly.add(new Polynomial(newCoeff, newExp));
-            }
-        }
-        return newPoly;
     }
 
     public boolean hasRoot(double root) {
