@@ -22,10 +22,9 @@ public class Polynomial {
 	expos = expo;
     }
 
-    public Polynomial(File f) throws Exception {
-        Scanner scanner = new Scanner(f);
-        String poly = scanner.nextLine();
-        poly = poly.replace(" ", "");
+    public Polynomial(File f) throws IOException {
+    try (Scanner scanner = new Scanner(f)) {
+        String poly = scanner.nextLine().replaceAll(" ", "");
         poly = poly.replaceAll("-", "+-");
         String[] parts = poly.split("\\+");
 
@@ -34,15 +33,12 @@ public class Polynomial {
 
         for (int i = 0; i < parts.length; i++) {
             String[] strPart = parts[i].split("x");
+
             coeffs[i] = Double.parseDouble(strPart[0]);
-            if (strPart.length == 1) {
-                expos[i] = 0;
-            } else {
-                expos[i] = Integer.parseInt(strPart[1]);
-            }
+            expos[i] = strPart.length > 1 ? Integer.parseInt(strPart[1]) : 0;
         }
-        scanner.close();
     }
+}
 
     public Polynomial add(Polynomial polynomial) {
     Polynomial small = (polynomial.coeffs.length < this.coeffs.length) ? polynomial : this;
