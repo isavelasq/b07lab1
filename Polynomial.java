@@ -1,136 +1,165 @@
 import java.util.Scanner;
 import java.io.File;
+import java.io.BufferedReader;
 import java.io.FileWriter;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.lang.Math;
 
 public class Polynomial {
-    double[] coefficients;
-    int[] exponents;
+    double[] coeffs;
+    int[] expos;
 
-    // No-argument constructor
     public Polynomial() {
-        coefficients = new double[1];
-        exponents = new int[1];
-        coefficients[0] = 0;
-        exponents[0] = 0;
+        coeffs = new double[1];
+	expos = new int[1];
+	coeffs[0] = 0;
+	expos[0] = 0;
     }
 
-    // Constructor with array of coefficients
-    public Polynomial(double[] coefficients, int[] exponents) {
-        this.coefficients = null;
-        this.exponents = null;
+    public Polynomial(double[] coeff, int[] expo) {
+        coeffs = coeff;
+	expos = expo;
     }
 
-    public Polynomial(File file) throws Exception {
-        Scanner myscan = new Scanner(file);
+    public Polynomial(File f) throws Exception {
+        Scanner scanner = new Scanner(f);
+        String poly = scanner.nextLine();
+        poly = poly.replace(" ", "");
+        poly = poly.replaceAll("-", "+-");
+        String[] parts = poly.split("\\+");
 
-        if (!myscan.hasNextLine()) {
-            this.coefficients = null;
-            this.exponents = null;
+        coeffs = new double[parts.length];
+        expos = new int[parts.length];
+
+        for (int i = 0; i < parts.length; i++) {
+            String[] strPart = parts[i].split("x");
+            coeffs[i] = Double.parseDouble(strPart[0]);
+            if (strPart.length == 1) {
+                expos[i] = 0;
+            } else {
+                expos[i] = Integer.parseInt(strPart[1]);
+            }
+        }
+        scanner.close();
+    }
+
+    public Polynomial add(Polynomial polynomial) {
+        Polynomial small;
+        Polynomial large;
+
+        if (polynomial.coeffs.length < this.coeffs.length) {
+            small = polynomial;
+            large = this;
         } else {
-            String line = myscan.nextLine();
-            line = line.replace("-", "+-");
+            small = this;
+            large = polynomial;
+        }
 
-            String[] poly_arr = line.split("\\+");
+        int largestExponent = 0;
+        int largeLength = large.coeffs.length;
+        int smallLength = small.coeffs.length;
 
-            this.exponents = new int[poly_arr.length];
-            this.coefficients = new double[poly_arr.length];
-
-            for (int i = 0; i < poly_arr.length; i++) {
-                String[] sub_arr = poly_arr[i].split("x");
-
-                coefficients[i] = Double.parseDouble(sub_arr[0]);
-
-                if (sub_arr.length > 1) {
-                    exponents[i] = Integer.parseInt(sub_arr[1]);
-                } else {
-                    exponents[i] = 0;
-                }
+        for (int i = 0; i < largeLength; i++) {
+            if (large.expos[i] > largestExponent) {
+                largestExponent = large.expos[i];
             }
-            myscan.close();
         }
-    }
-
-    public void saveToFile(String myfile) throws Exception {
-        String writeString = "";
-
-        for (int i = 0; i < this.coefficients.length; i++) {
-            writeString += coefficients[i];
-            if (exponents[i] != 0) {
-                writeString += "x" + exponents[i];
-            }
-            writeString += "+";
-        }
-
-        if (writeString.endsWith("+")) {
-            writeString = writeString.substring(0, writeString.length() - 1);
-        }
-
-        FileWriter myWriter = new FileWriter(new File(myfile));
-        myWriter.write(writeString);
-        myWriter.close();
-    }
-
-       // Method to add two polynomials
-    public Polynomial add(Polynomial p) {
-        int maxLength = Math.max(coefficients.length, p.coefficients.length);
-        double[] resultCoefficients = new double[maxLength];
-        int[] resultExponents = new int[maxLength];
-
-        for (int i = 0; i < maxLength; i++) {
-            double coeff1 = (i < coefficients.length) ? coefficients[i] : 0.0;
-            double coeff2 = (i < p.coefficients.length) ? p.coefficients[i] : 0.0;
-
-            resultCoefficients[i] = coeff1 + coeff2;
-            resultExponents[i] = (i < exponents.length) ? exponents[i] : p.exponents[i];
-        }
-
-        return new Polynomial(resultCoefficients, resultExponents);
-    }
-
-    // Method to multiply two polynomials
-    public Polynomial multiply(Polynomial p) {
-        int resultLength = coefficients.length + p.coefficients.length;
-        double[] resultCoefficients = new double[resultLength];
-        int[] resultExponents = new int[resultLength];
-
-        for (int i = 0; i < coefficients.length; i++) {
-            for (int j = 0; j < p.coefficients.length; j++) {
-                int newIndex = i + j;
-                resultCoefficients[newIndex] += coefficients[i] * p.coefficients[j];
-                resultExponents[newIndex] = exponents[i] + p.exponents[j];
+        for (int i = 0; i < smallLength; i++) {
+            if (small.expos[i] > largestExponent) {
+                largestExponent = small.expos[i];
             }
         }
 
-        return new Polynomial(resultCoefficients, resultExponents);
+        int[] tempExp = new int[largestExponent + 1];
+        double[] tempCoeff = new double[largestExponent + 1];
+
+        for (int i = 0; i < tempExp.length; i++) {
+            tempExp[i] = i;
+        }
+
+        for (int i = 0; i < largeLength; i++) {
+            tempCoeff[large.expos[i]] = large.coeffs[i];
+        }
+        for (int i = 0; i < smallLength; i++) {
+            tempCoeff[small.expos[i]] += small.coeffs[i];
+        }
+
+        int newLength = 0;
+        for (int i = 0; i < tempCoeff.length; i++) {
+            if (tempCoeff[i] != 0) {
+                newLength++;
+            }
+        }
+
+        double[] newCoeff = new double[newLength];
+        int[] newExp = new int[newLength];
+
+        int index = 0;
+        for (int i = 0; i < largestExponent + 1; i++) {
+            if (tempCoeff[i] != 0) {
+                newCoeff[index] = tempCoeff[i];
+                newExp[index] = tempExp[i];
+                index++;
+            }
+        }
+
+        return new Polynomial(newCoeff, newExp);
     }
 
-    // Method to evaluate the polynomial for a given value of x
-    public double evaluate(double x) {
-        double result = 0;
-        for (int i = 0; i < coefficients.length; i++) {
-            result += coefficients[i] * Math.pow(x, exponents[i]);
+    public double evaluate(double num) {
+        double sum = 0;
+        for (int i = 0; i < coeffs.length; i++) {
+            sum += coeffs[i] * Math.pow(num, expos[i]);
         }
-        return result;
+        return sum;
     }
 
     public boolean hasRoot(double root) {
         return evaluate(root) == 0;
     }
 
-    public String toString() {
-        String result = "";
-        for (int i = 0; i < coefficients.length; i++) {
-            if (i != 0) {
-                result = result + "+";
-            }
-            if (exponents[i] == 0) {
-                result = result + coefficients[i];
-            } else {
-                result = result + coefficients[i] + "x" + exponents[i];
+    public Polynomial multiply(Polynomial p) {
+        Polynomial newPoly = new Polynomial();
+        for (int i = 0; i < this.coeffs.length; i++) {
+            for (int j = 0; j < p.coeffs.length; j++) {
+                double[] newCoeff = {this.coeffs[i] * p.coeffs[j]};
+                int[] newExp = {this.expos[i] + p.expos[j]};
+                newPoly = newPoly.add(new Polynomial(newCoeff, newExp));
             }
         }
-        result = result.replace("+-", "-");
-        return result;
+        return newPoly;
+    }
+
+    public String toString() {
+    String result = "";
+    for (int i = 0; i < coeffs.length; i++) {
+        if (i != 0) {
+            result = result + "+";
+        }
+        if (expos[i] == 0) {
+            result = result + coeffs[i];
+        } else {
+            if (coeffs[i] == 1.0) {
+                result = result + "x";
+            } else if (coeffs[i] == -1.0) {
+                result = result + "-x";
+            } else {
+                result = result + coeffs[i] + "x";
+            }
+            if (expos[i] != 1) {
+                result = result + expos[i];
+            }
+        }
+    }
+    result = result.replace("+-", "-");
+    return result;
+}
+
+
+     public void saveToFile(String filename) throws Exception {
+        File file = new File(filename);
+        FileWriter output = new FileWriter(filename, false);
+        output.write(this.toString());
+        output.close();
     }
 }
