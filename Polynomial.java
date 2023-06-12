@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.lang.Math;
 
 public class Polynomial {
@@ -44,67 +45,45 @@ public class Polynomial {
     }
 
     public Polynomial add(Polynomial polynomial) {
-        Polynomial small;
-        Polynomial large;
+    Polynomial small = (polynomial.coeffs.length < this.coeffs.length) ? polynomial : this;
+    Polynomial large = (polynomial.coeffs.length < this.coeffs.length) ? this : polynomial;
 
-        if (polynomial.coeffs.length < this.coeffs.length) {
-            small = polynomial;
-            large = this;
-        } else {
-            small = this;
-            large = polynomial;
-        }
+    int largestExponent = Math.max(Arrays.stream(large.expos).max().orElse(0), Arrays.stream(small.expos).max().orElse(0));
+    int[] tempExp = new int[largestExponent + 1];
+    double[] tempCoeff = new double[largestExponent + 1];
 
-        int largestExponent = 0;
-        int largeLength = large.coeffs.length;
-        int smallLength = small.coeffs.length;
-
-        for (int i = 0; i < largeLength; i++) {
-            if (large.expos[i] > largestExponent) {
-                largestExponent = large.expos[i];
-            }
-        }
-        for (int i = 0; i < smallLength; i++) {
-            if (small.expos[i] > largestExponent) {
-                largestExponent = small.expos[i];
-            }
-        }
-
-        int[] tempExp = new int[largestExponent + 1];
-        double[] tempCoeff = new double[largestExponent + 1];
-
-        for (int i = 0; i < tempExp.length; i++) {
-            tempExp[i] = i;
-        }
-
-        for (int i = 0; i < largeLength; i++) {
-            tempCoeff[large.expos[i]] = large.coeffs[i];
-        }
-        for (int i = 0; i < smallLength; i++) {
-            tempCoeff[small.expos[i]] += small.coeffs[i];
-        }
-
-        int newLength = 0;
-        for (int i = 0; i < tempCoeff.length; i++) {
-            if (tempCoeff[i] != 0) {
-                newLength++;
-            }
-        }
-
-        double[] newCoeff = new double[newLength];
-        int[] newExp = new int[newLength];
-
-        int index = 0;
-        for (int i = 0; i < largestExponent + 1; i++) {
-            if (tempCoeff[i] != 0) {
-                newCoeff[index] = tempCoeff[i];
-                newExp[index] = tempExp[i];
-                index++;
-            }
-        }
-
-        return new Polynomial(newCoeff, newExp);
+    for (int i = 0; i < tempExp.length; i++) {
+        tempExp[i] = i;
     }
+
+    for (int i = 0; i < large.coeffs.length; i++) {
+        int exponent = large.expos[i];
+        if (exponent <= largestExponent) {
+            tempCoeff[exponent] += large.coeffs[i];
+        }
+    }
+    for (int i = 0; i < small.coeffs.length; i++) {
+        int exponent = small.expos[i];
+        if (exponent <= largestExponent) {
+            tempCoeff[exponent] += small.coeffs[i];
+        }
+    }
+
+    int newLength = (int) Arrays.stream(tempCoeff).filter(coeff -> coeff != 0).count();
+    double[] newCoeff = new double[newLength];
+    int[] newExp = new int[newLength];
+
+    int index = 0;
+    for (int i = 0; i < tempCoeff.length; i++) {
+        if (tempCoeff[i] != 0) {
+            newCoeff[index] = tempCoeff[i];
+            newExp[index] = tempExp[i];
+            index++;
+        }
+    }
+
+    return new Polynomial(newCoeff, newExp);
+}
 
     public double evaluate(double num) {
         double sum = 0;
